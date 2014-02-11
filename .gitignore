@@ -1,4 +1,7 @@
 *.class
+*.swp
+parun
+parun.jar
 
 # Package Files #
 *.jar
