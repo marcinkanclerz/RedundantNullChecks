@@ -161,14 +161,36 @@ public class NullChecks implements Flow.Analysis {
         System.out.println("exit: " + exit.toString());
         //// Useful debug info ////
         */
+        // List to keep track of redundant quads
+        List<Integer> redundantQuads = new ArrayList<Integer>();
 
+        // Print out redundant quads (first part of assignment)
         System.out.print(cfg.getMethod().getName().toString());
         for (int i=0; i<in.length; i++) {
             if (in[i] != null) {
-                if(in[i].contains(isNullCheckQuad[i])) System.out.print(" "+i);
+                if(in[i].contains(isNullCheckQuad[i])){ 
+                    System.out.print(" "+i);
+                    redundantQuads.add(i);
+                }
             }
         }
         System.out.println("");
+
+        // Remove redundant quads (second part of assignment)
+        if(redundantQuads.size() > 0){
+            for (int i = 0; i < redundantQuads.size(); i++) {
+                //System.out.println("removing"+redundantQuads.get(i));
+                QuadIterator qit = new QuadIterator(cfg);
+                while (qit.hasNext()) {
+                    int id = qit.next().getID();
+                    //System.out.println("   "+id);
+                    if(id == redundantQuads.get(i)){
+                        qit.remove();
+                        break;
+                    }
+                }
+            }
+        }
 
     }
 
