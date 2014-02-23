@@ -7,3 +7,5 @@ parun.jar
 *.jar
 *.war
 *.ear
+/eclipse
+/classes

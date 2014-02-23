@@ -1,1 +1,13 @@
-Describe your design for extra credit in this file.
+Three very common operations are great to be eliminated:
+1) lvl - 1 subtraction
+2) references to array[expression]
+3) redundant BOUNDS_CHECKs
+
+In order to do that we perform PRE and then BOUNDS_CHECK elimination.
+
+
+	 * We care only about a certain subset of expressions:
+	 *   add_i -1
+	 *   getfield_a (?) - this.root
+	 *   getfield_i - this.maxLevel for example
+	 *   aload_i (quick) and aload_a (skip) (?)
