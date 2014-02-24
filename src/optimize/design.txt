@@ -11,3 +11,16 @@ In order to do that we perform PRE and then BOUNDS_CHECK elimination.
 	 *   getfield_a (?) - this.root
 	 *   getfield_i - this.maxLevel for example
 	 *   aload_i (quick) and aload_a (skip) (?)
+	 
+	 
+ TODOs:
+* write a very simple test case (e.g. from book)
+* write good docs on ExprSet
+* make sure Raj has all the stuff he needs for 8.
+* explain that we have only binary operations right now
+
+* When later updating stuff, remember that e_use in LatestVisitor is computed in situ!
+* Add TODO
+* Rewrite design document.
+* add tests for complement
+* I think I might not be dealing properly with Entry/Exit in initializations + LatestVisitor

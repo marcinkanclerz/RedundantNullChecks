@@ -137,6 +137,13 @@ public class ExprSet implements Flow.DataflowObject {
 		}
 	}
 	
+	public ExprSet complement() {
+		ExprSet complement = ExprSet.getUniveralSet();
+		// TODO BUG: Is this strict?
+		complement.remove(this, true);
+		return complement;
+	}
+	
 	@Override 
 	public boolean equals(Object o) {
 		// TODO Deprimitivy.

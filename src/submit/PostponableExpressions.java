@@ -1,14 +1,20 @@
 package submit;
 
-import java.util.*;
+import java.util.Iterator;
 
 import joeq.Compiler.Quad.*;
 import joeq.Main.Helper;
-import flow.Flow;
 import submit.expr.*;
+import flow.Flow;
 
-public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Analysis {
-	private AnticipatedExpressionsTransferFunction transferFunction;
+public class PostponableExpressions extends BaseExprAnalysis implements Flow.Analysis {
+	private PostponableExpressionsTransferFunction transferFunction;
+	
+	private ExprSet[] earliest;
+	
+	public PostponableExpressions(ExprSet[] earliest) {
+		this.earliest = earliest;
+	}
 	
 	/**
 	 * Perform initializations.
@@ -27,7 +33,7 @@ public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Ana
         for (int i = 0; i < cfgSize; ++i) {
             this.in[i] = new ExprSet();
             this.out[i] = new ExprSet(); 
-            this.in[i].setToTop();
+            this.out[i].setToTop();
         }
         
         // Initialize the entry and exit points.
@@ -35,33 +41,30 @@ public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Ana
         this.exit = new ExprSet();
         
         // Initialize transfer function.
-        this.transferFunction = new AnticipatedExpressionsTransferFunction();
+        this.transferFunction = new PostponableExpressionsTransferFunction(this.earliest);
         this.transferFunction.val = new ExprSet();
 	}
 	
 	public void processQuad(Quad q) {
-        this.transferFunction.val.copy(out[q.getID()]);
+		this.transferFunction.val.copy(this.in[q.getID()]);
         Helper.runPass(q, this.transferFunction);
-        this.in[q.getID()].copy(this.transferFunction.val);
+        this.out[q.getID()].copy(this.transferFunction.val);
 	}
 	
 	public ExprSet[] getInResult() {
 		return this.in;
 	}
 	
-	
-	/**
-	 * TODO Do nothing in once sent to submission.
-	 */
-	public void postprocess(ControlFlowGraph cfg) { 
+	// TODO In submit this should be empty.
+	public void postprocess(ControlFlowGraph cfg) {
 //		System.out.println(cfg.getMethod().toString());
-
+//
 //		System.out.println("Universal set:");
 //		for(Iterator<Expr> it = ExprSet.getUniveralSet().iterator(); it.hasNext();) {
 //			Expr expr = it.next();
 //			System.out.println(((BinaryExpr)expr).toString());
 //		}
-		
+//		
 //		System.out.println("Anticipated out:");
 //		int cfgSize = BaseExprAnalysis.getCfgSize(cfg);
 //		for (int i = 0; i < cfgSize; ++i) {
@@ -70,11 +73,9 @@ public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Ana
 	}
 	
 	/**
-	 * Anticipated Expressions is BACKWARDS.
+	 * Postponable Expressions is FORWARDS.
 	 */
 	public boolean isForward() {
-		return false;
+		return true;
 	}
-	
-
 }

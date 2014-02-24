@@ -19,6 +19,7 @@ public class UniversalSetVisitor extends QuadVisitor.EmptyVisitor {
 		this.universal = null;
 	}
 	
+	// TODO Remove.
 	/*public void magic() {
         // Create and setup universalSet (Important since meet function is intersection) 
         Set<String> s = new TreeSet<String>();
@@ -44,7 +45,7 @@ public class UniversalSetVisitor extends QuadVisitor.EmptyVisitor {
 	public ExprSet getUniversalSet() {
 		if (this.universal == null) {
 			this.universal = new ExprSet();
-			Helper.runPass(cfg, this);
+			Helper.runPass(this.cfg, this);
 		}
 		
 		return this.universal;
@@ -53,8 +54,6 @@ public class UniversalSetVisitor extends QuadVisitor.EmptyVisitor {
 	@Override 
 	public void visitBinary(Quad q) {
 		Expr expr = new BinaryExpr(q, Operation.Gen);
-		// TODO Strict is set to true, which means that we're cutting corner on a+b==b+a, which is NOT
-		// 		perceived as the same.
 		this.universal.sumWith(new ExprSet(expr));
 	}
 }
