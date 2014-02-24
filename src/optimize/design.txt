@@ -12,6 +12,9 @@ In order to do that we perform PRE and then BOUNDS_CHECK elimination.
 	 *   getfield_i - this.maxLevel for example
 	 *   aload_i (quick) and aload_a (skip) (?)
 	 
+!!!!	 
+ TODO BUG: IfThenElse in TestClass blows up the thing. 
+!!!!	
 	 
  TODOs:
 * write a very simple test case (e.g. from book)

@@ -14,18 +14,14 @@ public class LatestVisitor extends QuadVisitor.EmptyVisitor {
 	private ControlFlowGraph cfg;
 	
 	/**
-	 * This visitor kicks itself off in computeLatest -> computeUse. 
+	 * TODO This is not a visitor and this should be refactored.
 	 */
-	public LatestVisitor(ControlFlowGraph cfg, ExprSet[] earliest, ExprSet[] postponableIn) {
+	public LatestVisitor(ControlFlowGraph cfg, ExprSet[] earliest, ExprSet[] postponableIn, ExprSet[] e_use) {
 		this.earliest = earliest;
 		this.postponableIn = postponableIn;
 		this.latest = null;
+		this.e_use = e_use;
 		this.cfg = cfg;
-	}
-	
-	@Override
-	public void visitBinary(Quad q) {
-		this.e_use[q.getID()] = new ExprSet(new BinaryExpr(q, Operation.Gen)); 
 	}
 	
 	public ExprSet[] getLatest() {
@@ -41,9 +37,13 @@ public class LatestVisitor extends QuadVisitor.EmptyVisitor {
 		
 		ExprSet[] intersectionOfSuccessors = this.computeIntersectionOfSuccessors();
 		ExprSet[] complementOfIntersectionOfSuccessors = this.computeComplementOfIntersectionOfSuccessors(intersectionOfSuccessors);
+		ExprSet[] localE_use = new ExprSet[this.earliest.length];
 		
-		ExprSet[] e_use = this.computeUse();
-
+		for (int i = 0; i < localE_use.length; ++i) {
+			localE_use[i] = new ExprSet();
+			localE_use[i].copy(this.e_use[i]);
+		}
+		
 		// This horrendous operation is defined @p649.
 		// latest[B] = (earliest[B] SUM postponableIn[B]) INTERSECT (e_use[B] SUM ~(INTERSECT[S=succ(B)](earliest[S] SUM postponableIn[S]))
 		for (int i = 0; i < this.latest.length; ++i) {
@@ -53,11 +53,11 @@ public class LatestVisitor extends QuadVisitor.EmptyVisitor {
 			this.latest[i].sumWith(this.postponableIn[i]);
 			
 			// e_use[B] SUM ~(INTERSECT[S=succ(B)](earliest[S] SUM postponableIn[S])
-			e_use[i].sumWith(complementOfIntersectionOfSuccessors[i]);
+			localE_use[i].sumWith(complementOfIntersectionOfSuccessors[i]);
 			
 			// the Big INTERSECT
 			// TODO BUG: Is this intersection strict?
-			this.latest[i].intersectWith(e_use[i], true);
+			this.latest[i].intersectWith(localE_use[i], true);
 		}
 	}
 	
@@ -111,17 +111,5 @@ public class LatestVisitor extends QuadVisitor.EmptyVisitor {
 		}
 		
 		return complement;
-	}
-	
-	// TODO BUG: This is bug prone once we will be trying to cope with more than BinaryExpressions only.
-	private ExprSet[] computeUse() {
-		this.e_use = new ExprSet[this.earliest.length];
-		for (int i = 0; i < this.e_use.length; ++i) {
-			this.e_use[i] = new ExprSet();
-		}
-		
-		Helper.runPass(this.cfg, this);
-		
-		return this.e_use;
 	}
 }

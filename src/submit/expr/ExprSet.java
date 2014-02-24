@@ -137,6 +137,9 @@ public class ExprSet implements Flow.DataflowObject {
 		}
 	}
 	
+	/**
+	 * Returns a complement of the expression set. 
+	 */
 	public ExprSet complement() {
 		ExprSet complement = ExprSet.getUniveralSet();
 		// TODO BUG: Is this strict?

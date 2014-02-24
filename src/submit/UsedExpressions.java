@@ -13,6 +13,7 @@ public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
 	private ExprSet[] earliest;
 	private ExprSet[] postponableIn;
 	private ExprSet[] latest;
+	private ExprSet[] e_use;
 	
 	public UsedExpressions(ExprSet[] earliest, ExprSet[] postponableIn) {
 		this.earliest = earliest;
@@ -43,7 +44,11 @@ public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
         this.entry = new ExprSet();
         this.exit = new ExprSet();
         
-        LatestVisitor latestVisitor = new LatestVisitor(cfg, this.earliest, this.postponableIn);
+        // TODO BUG WTF? Why earliest is is big?
+        E_UseVisitor e_useVisitor = new E_UseVisitor(cfg, this.earliest.length);
+        this.e_use = e_useVisitor.getE_use();
+        
+        LatestVisitor latestVisitor = new LatestVisitor(cfg, this.earliest, this.postponableIn, this.e_use);
         this.latest = latestVisitor.getLatest();
         
         // Initialize transfer function.
@@ -65,24 +70,28 @@ public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
 		return this.latest;
 	}
 	
+	public ExprSet[] getE_use() {
+		return this.e_use;
+	}
+	
 	
 	/**
 	 * TODO Do nothing in once sent to submission.
 	 */
 	public void postprocess(ControlFlowGraph cfg) { 
-		System.out.println(cfg.getMethod().toString());
-
-		System.out.println("Universal set:");
-		for(Iterator<Expr> it = ExprSet.getUniveralSet().iterator(); it.hasNext();) {
-			Expr expr = it.next();
-			System.out.println(((BinaryExpr)expr).toString());
-		}
-		
-		System.out.println("Used out:");
-		int cfgSize = BaseExprAnalysis.getCfgSize(cfg);
-		for (int i = 0; i < cfgSize; ++i) {
-			System.out.println(i + ": " + this.in[i].toString());
-		}
+//		System.out.println(cfg.getMethod().toString());
+//
+//		System.out.println("Universal set:");
+//		for(Iterator<Expr> it = ExprSet.getUniveralSet().iterator(); it.hasNext();) {
+//			Expr expr = it.next();
+//			System.out.println(((BinaryExpr)expr).toString());
+//		}
+//		
+//		System.out.println("Used out:");
+//		int cfgSize = BaseExprAnalysis.getCfgSize(cfg);
+//		for (int i = 0; i < cfgSize; ++i) {
+//			System.out.println(i + ": " + this.in[i].toString());
+//		}
 	}
 	
 	/**
