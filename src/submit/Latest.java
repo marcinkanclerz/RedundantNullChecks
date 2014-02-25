@@ -6,22 +6,25 @@ import joeq.Compiler.Quad.*;
 import joeq.Main.Helper;
 import submit.expr.*;
 
-public class LatestVisitor extends QuadVisitor.EmptyVisitor {
+public class Latest extends QuadVisitor.EmptyVisitor {
 	private ExprSet[] earliest;
 	private ExprSet[] postponableIn;
 	private ExprSet[] latest;
 	private ExprSet[] e_use;
+	private ExprSetMap latestComplementMap;
 	private ControlFlowGraph cfg;
 	
-	/**
-	 * TODO This is not a visitor and this should be refactored.
-	 */
-	public LatestVisitor(ControlFlowGraph cfg, ExprSet[] earliest, ExprSet[] postponableIn, ExprSet[] e_use) {
-		this.earliest = earliest;
-		this.postponableIn = postponableIn;
-		this.latest = null;
-		this.e_use = e_use;
+	public Latest(ControlFlowGraph cfg, 
+			ExprSetMap earliestMap, 
+			ExprSetMap postponableInMap, 
+			ExprSetMap e_useMap, 
+			ExprSetMap latestComplementMap) {
+		this.earliest = earliestMap.getEntry(cfg.getMethod().toString());
+		this.postponableIn = postponableInMap.getEntry(cfg.getMethod().toString());
+		this.e_use = e_useMap.getEntry(cfg.getMethod().toString());
 		this.cfg = cfg;
+		this.latest = null;
+		this.latestComplementMap = latestComplementMap;
 	}
 	
 	public ExprSet[] getLatest() {
@@ -109,6 +112,8 @@ public class LatestVisitor extends QuadVisitor.EmptyVisitor {
 		for (int i = 0; i < complement.length; ++i) {
 			complement[i] = intersectionOfSuccessors[i].complement();
 		}
+		
+		this.latestComplementMap.saveEntry(this.cfg.getMethod().toString(), complement);
 		
 		return complement;
 	}

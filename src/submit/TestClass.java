@@ -11,15 +11,17 @@ public class TestClass {
 	
 	// This one actually won't work, cause there's a bug:
 	
-//	public int ifThenElse(int y, int z) {
-//		int x = 1, u;
-//		
-//		if (x == 1) {
-//			x = y - z;
-//		}
-//		
-//		u = y - z;
-//		
-//		return x;
-//	}
+	public int ifThenElse(int y, int z) {
+		int x = 1, u;
+		
+		if (x == 1) {
+			x = y + z;
+		} else {
+			x = y - z;
+		}
+		
+		u = y + z;
+		
+		return x;
+	}
 }

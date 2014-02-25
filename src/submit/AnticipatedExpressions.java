@@ -9,6 +9,11 @@ import submit.expr.*;
 
 public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Analysis {
 	private AnticipatedExpressionsTransferFunction transferFunction;
+	private ExprSetMap anticipatedInMap;
+	
+	public AnticipatedExpressions(ExprSetMap anticipatedInMap) {
+		this.anticipatedInMap = anticipatedInMap;
+	}
 	
 	/**
 	 * Perform initializations.
@@ -45,15 +50,13 @@ public class AnticipatedExpressions extends BaseExprAnalysis implements Flow.Ana
         this.in[q.getID()].copy(this.transferFunction.val);
 	}
 	
-	public ExprSet[] getInResult() {
-		return this.in;
-	}
-	
-	
 	/**
 	 * TODO Do nothing in once sent to submission.
 	 */
-	public void postprocess(ControlFlowGraph cfg) { 
+	public void postprocess(ControlFlowGraph cfg) {
+		// Cope with multiple methods.
+		this.anticipatedInMap.saveEntry(cfg.getMethod().toString(), this.in);
+		
 //		System.out.println(cfg.getMethod().toString());
 
 //		System.out.println("Universal set:");

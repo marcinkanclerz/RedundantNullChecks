@@ -10,14 +10,26 @@ import flow.Flow;
 
 public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
 	private UsedExpressionsTransferFunction transferFunction;
-	private ExprSet[] earliest;
-	private ExprSet[] postponableIn;
-	private ExprSet[] latest;
-	private ExprSet[] e_use;
 	
-	public UsedExpressions(ExprSet[] earliest, ExprSet[] postponableIn) {
-		this.earliest = earliest;
-		this.postponableIn = postponableIn;
+	private ExprSetMap earliestMap, 
+		postponableInMap, 
+		latestMap, 
+		latestComplementMap, 
+		usedOutMap,
+		e_useMap;
+	
+	public UsedExpressions(ExprSetMap earliestMap, 
+		ExprSetMap postponableInMap, 
+		ExprSetMap latestMap, 
+		ExprSetMap latestComplementMap, 
+		ExprSetMap usedOutMap,
+		ExprSetMap e_useMap) {
+		this.earliestMap = earliestMap;
+		this.postponableInMap = postponableInMap;
+		this.latestMap = latestMap;
+		this.latestComplementMap = latestComplementMap;
+		this.usedOutMap = usedOutMap;
+		this.e_useMap = e_useMap;
 	}
 	
 	/**
@@ -44,15 +56,14 @@ public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
         this.entry = new ExprSet();
         this.exit = new ExprSet();
         
-        // TODO BUG WTF? Why earliest is is big?
-        E_UseVisitor e_useVisitor = new E_UseVisitor(cfg, this.earliest.length);
-        this.e_use = e_useVisitor.getE_use();
+        E_UseVisitor e_useVisitor = new E_UseVisitor(cfg, cfgSize);
+        this.e_useMap.saveEntry(cfg.getMethod().toString(), e_useVisitor.getE_use());
         
-        LatestVisitor latestVisitor = new LatestVisitor(cfg, this.earliest, this.postponableIn, this.e_use);
-        this.latest = latestVisitor.getLatest();
+        Latest latestComputation = new Latest(cfg, this.earliestMap, this.postponableInMap, this.e_useMap, this.latestComplementMap);
+        this.latestMap.saveEntry(cfg.getMethod().toString(), latestComputation.getLatest());
         
         // Initialize transfer function.
-        this.transferFunction = new UsedExpressionsTransferFunction(this.latest);
+        this.transferFunction = new UsedExpressionsTransferFunction(this.latestMap.getEntry(cfg.getMethod().toString()));
         this.transferFunction.val = new ExprSet();
 	}
 	
@@ -62,23 +73,13 @@ public class UsedExpressions extends BaseExprAnalysis implements Flow.Analysis {
         this.in[q.getID()].copy(this.transferFunction.val);
 	}
 	
-	public ExprSet[] getUsedOut() {
-		return this.out;
-	}
-	
-	public ExprSet[] getLatest() {
-		return this.latest;
-	}
-	
-	public ExprSet[] getE_use() {
-		return this.e_use;
-	}
-	
 	
 	/**
 	 * TODO Do nothing in once sent to submission.
 	 */
-	public void postprocess(ControlFlowGraph cfg) { 
+	public void postprocess(ControlFlowGraph cfg) {
+		this.usedOutMap.saveEntry(cfg.getMethod().toString(), this.out);
+		
 //		System.out.println(cfg.getMethod().toString());
 //
 //		System.out.println("Universal set:");

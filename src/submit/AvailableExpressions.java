@@ -9,11 +9,14 @@ import submit.expr.*;
 
 public class AvailableExpressions extends BaseExprAnalysis implements Flow.Analysis {
 	private AvailableExpressionsTransferFunction transferFunction;
+	private ExprSetMap anticipatedInMap;
+	private ExprSetMap availableInMap;
 	
 	private ExprSet[] anticipatedIn;
 	
-	public AvailableExpressions(ExprSet[] anticipatedIn) {
-		this.anticipatedIn = anticipatedIn;
+	public AvailableExpressions(ExprSetMap anticipatedInMap, ExprSetMap availableInMap) {
+		this.anticipatedInMap = anticipatedInMap;
+		this.availableInMap = availableInMap;
 	}
 	
 	/**
@@ -22,6 +25,9 @@ public class AvailableExpressions extends BaseExprAnalysis implements Flow.Analy
 	public void preprocess(ControlFlowGraph cfg) {
 		// Get size of the CFG.
 		int cfgSize = BaseExprAnalysis.getCfgSize(cfg);
+		
+		// Cope with multiple methods.
+		this.anticipatedIn = this.anticipatedInMap.getEntry(cfg.getMethod().toString());
 		
         // Create universal set of expressions, according to definition of ExprSet.
         ExprSet.setupLattice(cfg, true /* meet is intersection */, true /* top is universal */);
@@ -45,10 +51,6 @@ public class AvailableExpressions extends BaseExprAnalysis implements Flow.Analy
         this.transferFunction.val = new ExprSet();
 	}
 	
-	public ExprSet[] getInResult() {
-		return this.in;
-	}
-	
 	public void processQuad(Quad q) {
 		this.transferFunction.val.copy(this.in[q.getID()]);
         Helper.runPass(q, this.transferFunction);
@@ -56,7 +58,8 @@ public class AvailableExpressions extends BaseExprAnalysis implements Flow.Analy
 	}
 	
 	public void postprocess(ControlFlowGraph cfg) {
-		
+		// Cope with multiple methods.
+		this.availableInMap.saveEntry(cfg.getMethod().toString(), this.in);
 	}
 	
 	/**

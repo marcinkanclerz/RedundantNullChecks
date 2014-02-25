@@ -1,30 +1,36 @@
 package submit;
 
+import java.util.Iterator;
+
 import submit.expr.*;
 import joeq.Compiler.Quad.QuadVisitor;
 
-public class EarliestVisitor extends QuadVisitor.EmptyVisitor {
-	private ExprSet[] earliest, anticipatedIn, availableIn;
+public class Earliest {
+	private ExprSetMap earliestMap, anticipatedInMap, availableInMap;
 	
-	public EarliestVisitor(ExprSet[] anticipatedIn, ExprSet[] availableIn) {
-		this.anticipatedIn = anticipatedIn;
-		this.availableIn = availableIn;
-		this.earliest = null;
+	public Earliest(ExprSetMap anticipatedInMap, ExprSetMap availableInMap, ExprSetMap earliestMap) {
+		this.anticipatedInMap = anticipatedInMap;
+		this.availableInMap = availableInMap;
+		this.earliestMap = earliestMap;
 	}
 	
-	public ExprSet[] getEarliest() {
-		if (this.earliest == null) {
-			this.earliest = new ExprSet[this.anticipatedIn.length];
+	public void doTheMagic() {
+		for (Iterator<String> it = this.anticipatedInMap.getKeyIterator(); it.hasNext();) {
+			String methodSignature = it.next();
 			
-			for (int i = 0; i < this.earliest.length; ++i) {
+			ExprSet[] anticipatedIn = this.anticipatedInMap.getEntry(methodSignature);
+			ExprSet[] availableIn = this.availableInMap.getEntry(methodSignature);
+			ExprSet[] earliest = new ExprSet[availableIn.length];
+			
+			for (int i = 0; i < earliest.length; ++i) {
 				// Operation defined @p649.
 				// earliest[B] = anticipated[B].in - available[B].in
-				this.earliest[i] = new ExprSet();
-				this.earliest[i].copy(this.anticipatedIn[i]);
-				this.earliest[i].remove(this.availableIn[i], false);
+				earliest[i] = new ExprSet();
+				earliest[i].copy(anticipatedIn[i]);
+				earliest[i].remove(availableIn[i], false);
 			}
+			
+			this.earliestMap.saveEntry(methodSignature, earliest);
 		}
-		
-		return this.earliest;
 	}
 }

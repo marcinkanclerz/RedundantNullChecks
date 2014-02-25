@@ -9,11 +9,13 @@ import flow.Flow;
 
 public class PostponableExpressions extends BaseExprAnalysis implements Flow.Analysis {
 	private PostponableExpressionsTransferFunction transferFunction;
+	private ExprSetMap earliestMap, postponableInMap;
 	
 	private ExprSet[] earliest;
 	
-	public PostponableExpressions(ExprSet[] earliest) {
-		this.earliest = earliest;
+	public PostponableExpressions(ExprSetMap earliestMap, ExprSetMap postponableInMap) {
+		this.earliestMap = earliestMap;
+		this.postponableInMap = postponableInMap;
 	}
 	
 	/**
@@ -22,6 +24,9 @@ public class PostponableExpressions extends BaseExprAnalysis implements Flow.Ana
 	public void preprocess(ControlFlowGraph cfg) {
 		// Get size of the CFG.
 		int cfgSize = BaseExprAnalysis.getCfgSize(cfg);
+		
+		// Cope with multiple methods.
+		this.earliest = this.earliestMap.getEntry(cfg.getMethod().toString());
 		
         // Create universal set of expressions, according to definition of ExprSet.
         ExprSet.setupLattice(cfg, true /* meet is intersection */, true /* top is universal */);
@@ -51,12 +56,11 @@ public class PostponableExpressions extends BaseExprAnalysis implements Flow.Ana
         this.out[q.getID()].copy(this.transferFunction.val);
 	}
 	
-	public ExprSet[] getInResult() {
-		return this.in;
-	}
-	
 	// TODO In submit this should be empty.
 	public void postprocess(ControlFlowGraph cfg) {
+		// Cope with multiple methods.
+		this.postponableInMap.saveEntry(cfg.getMethod().toString(), this.in);
+		
 //		System.out.println(cfg.getMethod().toString());
 //
 //		System.out.println("Universal set:");
