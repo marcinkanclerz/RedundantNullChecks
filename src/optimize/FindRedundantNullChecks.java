@@ -27,7 +27,7 @@ public class FindRedundantNullChecks {
             classes[i] = (jq_Class)Helper.load(args[i]);
 
         Flow.Solver solver = new MySolver();
-        Flow.Analysis analysis = new NullChecks();
+        Flow.Analysis analysis = new NullChecks(true);
         
         // register the analysis with the solver.
         solver.registerAnalysis(analysis);
@@ -40,3 +40,4 @@ public class FindRedundantNullChecks {
 
     }
 }
+

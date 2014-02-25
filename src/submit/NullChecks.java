@@ -75,7 +75,10 @@ public class NullChecks implements Flow.Analysis {
     private VarSet[] in, out;
     private VarSet entry, exit;
     private String[] isNullCheckQuad; //is quad NULL_CHECK ? "<nullchecked var>" : "" 
-    
+
+    private boolean printOutput; //true for FindRedundantNullChecks, false for Optimize
+    public NullChecks(boolean printout) { printOutput = printout; }
+
     /**
      * This method initializes the datflow framework.
      *
@@ -165,16 +168,16 @@ public class NullChecks implements Flow.Analysis {
         List<Integer> redundantQuads = new ArrayList<Integer>();
 
         // Print out redundant quads (first part of assignment)
-        System.out.print(cfg.getMethod().getName().toString());
+        if(printOutput){System.out.print(cfg.getMethod().getName().toString());}
         for (int i=0; i<in.length; i++) {
             if (in[i] != null) {
                 if(in[i].contains(isNullCheckQuad[i])){ 
-                    System.out.print(" "+i);
+                    if(printOutput){System.out.print(" "+i);}
                     redundantQuads.add(i);
                 }
             }
         }
-        System.out.println("");
+        if(printOutput){System.out.println("");}
 
         // Remove redundant quads (second part of assignment)
         if(redundantQuads.size() > 0){

@@ -19,7 +19,7 @@ public class Optimize {
             jq_Class classes = (jq_Class)Helper.load(optimizeFiles.get(i));
             // Run your optimization on each classes.
             if(nullCheckOnly){
-            	Flow.Analysis analysis = new NullChecks();
+            	Flow.Analysis analysis = new NullChecks(false);
                 solver.registerAnalysis(analysis);
                 Helper.runPass(classes, solver);
             } else {
@@ -91,3 +91,4 @@ public class Optimize {
         }
     }
 }
+
