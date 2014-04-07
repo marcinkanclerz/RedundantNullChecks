@@ -1,29 +1,80 @@
-Three very common operations are great to be eliminated:
-1) lvl - 1 subtraction
-2) references to array[expression]
-3) redundant BOUNDS_CHECKs
+We implemented Partial Redundancy Elimination given it's benefits of reducing latency and possibly number of operations along a path by eliminating multiple expressions with the same result. However, we realized that this latency is cannot be reduced via replacing a operation to evaluate an expression with a move instruction since Java is interpreted. We also realized that unless an expression and the assignment of its result to a destination takes multiple quads, PRE will not be successful in reducing the number of quads. It will instead, increase the number of quads along a execution path. 
+For example:
+1: a = x+y;
+2: b = x+y;
+3: c = x+y;
+which was originally 3 quads will now be:
+1: t = x+y;
+2: a = t;
+3: b = t;
+4: c = t;
+after PRE. Since all the expressions in the SkipList and QuickSort take only one quad to evaluate and assign value to its destination, we had to stop using PRE as a technique.
 
-In order to do that we perform PRE and then BOUNDS_CHECK elimination.
+Removing redundant nullchecks (implemented), boundchecks (implemented) are good optimizations. We think that function inlining (merging functions back with callers) would be a good optimization since that would get rid of a lot of INVOKE_VIRTUAL quads (this was nontrivial and we could not implement this in time either).
 
 
-	 * We care only about a certain subset of expressions:
-	 *   add_i -1
-	 *   getfield_a (?) - this.root
-	 *   getfield_i - this.maxLevel for example
-	 *   aload_i (quick) and aload_a (skip) (?)
-	 
-!!!!	 
- TODO BUG: IfThenElse in TestClass blows up the thing. 
-!!!!	
-	 
- TODOs:
-* write a very simple test case (e.g. from book)
-* write good docs on ExprSet
-* make sure Raj has all the stuff he needs for 8.
-* explain that we have only binary operations right now
 
-* When later updating stuff, remember that e_use in LatestVisitor is computed in situ!
-* Add TODO
-* Rewrite design document.
-* add tests for complement
-* I think I might not be dealing properly with Entry/Exit in initializations + LatestVisitor
+
+PRE optimization that we tried:
+
+1. General approach
+
+We have analysed the Quad printout of SkipList and QuickSort and concluded, that a specialized version of PRE should be 
+efficient in decreasing the number of quads executed.
+
+It is worth noting, that this is an interesting optimization goal. We are not aiming at generating the fastest code,
+but the shortest byte-wise from runtime perspective. Speed comes implicitly.
+
+
+2. Operations we wanted to remove and notes on implications
+
+The operations we wanted to cut with our PRE implementation were:
+
+2.1. Binary operations (ADD_I, etc.)
+
+These were generated mainly by redundant computations e.g. of expression [lvl - 1] or [maxLevel - 1] in SkipList.
+These computations are in insert method, thus it felt crucial to optimize internal loop.
+It turned out, that there were not as many partial computations as we thought and that quad-wise removal of them
+was actually generating additional quads that were computed. That was something we expected, but the scale of issue
+turned out to be bigger than we anticipated. To remove these computations was our main goal as a deliverable and 
+unfortunately we understood how expensive is removal of redundant expressions from SkipList/QuickSort only once
+we got to implementation of CFG modification.
+
+Our attitude was too high level, we should have spent more time on implementation details.  
+
+2.2. Object property accessors (GETFIELD_A, etc.)
+
+Object properties are accessed all across the board in 2 most important loops of insert/search, thus that was our
+next goal: to remove those. Unfortunately, time wise we didn't manage to implement this, though the framework for
+further extension of our PRE is there.
+
+2.3. Redundant BOUNDS_CHECKs, ALOADs
+
+Obviously coping with arrays introduces additional issues, but we think were on track. The reasoning why these
+quads were very important to remove whenever redundant is the same as in 2.2.
+
+
+3. What we delivered. 
+
+Quick answer: unit tests and PRE analysis framework.
+
+Long answer:
+
+An easily extendable PRE analysis framework. The crucial part turned out to be implementation of sets of expressions and
+abstraction of expressions. More complicated expressions can be expressed by easily implementing the Expr interface.
+Binary expressions (commutative and not) are covered already.
+
+We don't have good documentation and code definitely needs refactoring, however we have unit tests of the most important parts.
+Especially the code actually facing the user (ExprSet and Expr interface) is documented and unit tested (!).
+
+We didn't implement removal of quads. Only because of lack of time :-(
+
+
+4. Other approaches
+
+4.1 Constant propagation 
+We thought about leveraging constant propagation as a backup option, however constant propagation would not give great results
+as there were not many constants to propagate to begin with.
+
+4.2 Simple BOUNDS_CHECK removal
+We also thought about this approach, but had no time to implement it.

@@ -7,6 +7,7 @@ import submit.expr.*;
 import joeq.Class.jq_Class;
 import joeq.Main.Helper;
 import flow.Flow;
+import joeq.Compiler.Quad.*;
 
 public class Optimize {
     /*
@@ -23,6 +24,18 @@ public class Optimize {
                 solver.registerAnalysis(analysis);
                 Helper.runPass(classes, solver);
             } else {
+              // NullChecks
+              Flow.Analysis analysis = new NullChecks(false);
+                solver.registerAnalysis(analysis);
+                Helper.runPass(classes, solver);
+              // BoundChecks  
+            	analysis = new BoundsChecks(false);
+                solver.registerAnalysis(analysis);
+                Helper.runPass(classes, solver);
+
+             /* 
+              Helper.runPass(classes, new PrintCFG());
+              
             	ExprSetMap anticipatedInMap = new ExprSetMap();
                 AnticipatedExpressions anticipatedExpressions = new AnticipatedExpressions(anticipatedInMap);
                 solver.registerAnalysis(anticipatedExpressions);
@@ -59,6 +72,7 @@ public class Optimize {
                 preOutput.doTheMagic();
 
                 preOutput.printOutput();
+                */
             }
         }
     }
